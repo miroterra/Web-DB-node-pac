@@ -15,7 +15,6 @@ router.get('/posts', async function (req, res) {
 });
 
 router.get('/new-post', async function (req, res) {
-  // 비구조화
   const [authors] = await db.query('SELECT * FROM authors');
   res.render('create-post', { authors: authors });
 });
@@ -38,6 +37,7 @@ router.get('/posts/:id', async function (req, res) {
     return res.status(404).render('404');
   }
 
+  //날짜
   const postData = {
     ...posts[0],
     date: posts[0].date.toISOString(),
@@ -49,6 +49,27 @@ router.get('/posts/:id', async function (req, res) {
     }),
   };
   res.render('post-detail', { post: postData });
+});
+
+router.get('/posts/:id/edit', async function (req, res) {
+  const query = `
+  SELECT * FROM posts WHERE id = ?
+  `;
+  const [posts] = await db.query(query, [req.params.id]);
+
+  if (!posts || posts.length === 0) {
+    return res.status(404).render('404');
+  }
+  res.render('update-post', { post: posts[0] });
+});
+
+router.post('/posts/:id/edit', async function (req, res) {
+  const query = `
+  UPDATE posts SET title = ?, summary = ?, body = ?
+  WHERE id = ?
+  `;
+  await db.query(query, [req.body.title, req.body.summary, req.body.content, req.params.id]);
+  res.redirect('/posts');
 });
 
 module.exports = router;
